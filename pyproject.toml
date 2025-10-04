@@ -1,0 +1,9 @@
+[project]
+name = "py-openapi"
+version = "0.1.0"
+description = "OpenAPI to Markdown generator"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pyinstaller>=6.16.0",
+]

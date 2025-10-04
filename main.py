@@ -1,0 +1,27 @@
+import os
+import sys
+
+from openapi2md.openapi2md import openapi_parse
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: openapi_parser <path-to-openapi.json> <server's base_url>")
+        sys.exit(1)
+
+    base_url = ""
+
+    if len(sys.argv) > 2:
+        base_url = sys.argv[2]
+
+    spec_path = sys.argv[1]
+
+    if not os.path.exists(spec_path):
+        print(f"❌ File not found: {spec_path}")
+        sys.exit(1)
+
+    openapi_parse(spec_path, base_url)
+
+
+if __name__ == "__main__":
+    main()

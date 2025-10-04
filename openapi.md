@@ -12,35 +12,35 @@
 
 ---
 
-> [!ABSTRACT] health-check
+> health-check
 
-> [!hint] Health Check
+> [!tip] Health Check
 
 - Authorizations: **`None`**
 
 **Endpoint:** **`GET`** [localhost:8000/v1/health_check/]()
 
-> [!ABSTRACT] user
+> user
 
-> [!hint] Register User Endpoint
+> [!tip] Register User Endpoint
 
 - Authorizations: **`None`**
 
 **Endpoint:** **`POST`** [localhost:8000/v1/user/register/]()
 
-> [!hint] Login
+> [!tip] Login
 
 - Authorizations: **`None`**
 
 **Endpoint:** **`POST`** [localhost:8000/v1/user/login/]()
 
-> [!hint] Me
+> [!tip] Me
 
 - Authorizations: **`CustomHTTPBearer`** _(http, bearer)_
 
 **Endpoint:** **`GET`** [localhost:8000/v1/user/me/]()
 
-> [!hint] Partial Update
+> [!tip] Partial Update
 
 - Authorizations: **`CustomHTTPBearer`** _(http, bearer)_
 

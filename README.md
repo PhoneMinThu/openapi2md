@@ -20,4 +20,10 @@ uv run pyinstaller --onefile \
 main.py
 ```
 
+> copy to bin
+
+```bash
+cp ./dist/main ~/.local/bin/openapi2md
+```
+
 ---

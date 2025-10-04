@@ -4,8 +4,6 @@ import os
 from string import Template
 from collections import OrderedDict
 
-base_url = "localhost:8000"
-
 
 def read_spec_json(file_path: str):
     with open(file_path, "r") as spec_json:
@@ -44,7 +42,7 @@ def get_auth_format(schemes):
     return auth_schemes
 
 
-def get_path_content(paths, securitySchemes):
+def get_path_content(paths, securitySchemes, base_url=""):
     path_content_json = {}
     for path, path_info in paths.items():
         endpoint = f"{base_url}{path}"
@@ -83,7 +81,7 @@ def get_path_content(paths, securitySchemes):
     return combined_path_content
 
 
-def openapi_parse(spec_path: str):
+def openapi_parse(spec_path: str, base_url: str = ""):
     json_data = read_spec_json(spec_path)
 
     info = json_data.get("info", {})
@@ -97,7 +95,7 @@ def openapi_parse(spec_path: str):
     auths = Template(get_template("auth")).substitute(auths=auth_schemes.strip())
 
     paths = OrderedDict(json_data.get("paths", {}))
-    combined_path_content = get_path_content(paths, securitySchemes)
+    combined_path_content = get_path_content(paths, securitySchemes, base_url)
 
     content = Template(get_template("combined")).substitute(
         info=info_content.strip(),

@@ -31,15 +31,15 @@ def get_template(template_name: str):
 
 
 def write_md(content: str, output_path: str):
-    with open(output_path, "w") as api_doc:
+    with open(output_path, "w", encoding="utf-8") as api_doc:
         api_doc.write(content)
 
 
 def get_auth_format(schemes):
-    auth_schemes = ""
-    for key, scheme in schemes.items():
-        auth_schemes += f"**`{key}`** _({scheme.get('type')}, {scheme.get('scheme')})_"
-    return auth_schemes
+    return "".join(
+        f"**`{key}`** _({scheme.get('type')}, {scheme.get('scheme')})_"
+        for key, scheme in schemes.items()
+    )
 
 
 def get_path_content(paths, securitySchemes, base_url=""):
@@ -47,35 +47,33 @@ def get_path_content(paths, securitySchemes, base_url=""):
     for path, path_info in paths.items():
         endpoint = f"{base_url}{path}"
         for method, method_info in path_info.items():
-            tags = method_info.get("tags", ["Default"])[0]
-            summary = method_info.get("summary", "No summary provided")
+            for tag in method_info.get("tags", ["Default"]):
+                summary = method_info.get("summary", "No summary provided")
 
-            security_schemes = ""
-            for security in method_info.get("security", []):
-                for key, _ in security.items():
-                    scheme = securitySchemes.get(key, {})
-                    security_schemes += (
-                        f"**`{key}`** _({scheme.get('type')}, {scheme.get('scheme')})_"
-                    )
-            security_schemes = "- Authorizations: " + (
-                security_schemes.strip() if security_schemes else "**`None`**"
-            )
+                security_schemes = ""
+                for security in method_info.get("security", []):
+                    for key, _ in security.items():
+                        scheme = securitySchemes.get(key, {})
+                        security_schemes += f"**`{key}`** _({scheme.get('type')}, {scheme.get('scheme')})_"
+                security_schemes = "- Authorizations: " + (
+                    security_schemes.strip() if security_schemes else "**`None`**"
+                )
 
-            path_template = Template(get_template("path"))
-            path_content = path_template.substitute(
-                endpoint=endpoint.strip(),
-                auths=security_schemes,
-                method=method.upper(),
-                summary=summary.strip(),
-            )
-            path_content_json.setdefault(tags, []).append(path_content)
+                path_template = Template(get_template("path"))
+                path_content = path_template.substitute(
+                    endpoint=endpoint.strip(),
+                    auths=security_schemes,
+                    method=method.upper(),
+                    summary=summary.strip(),
+                )
+                path_content_json.setdefault(tag, []).append(path_content)
 
     combined_path_content = ""
     paths_template = Template(get_template("paths"))
-    for tags, contents in path_content_json.items():
+    for tag, contents in path_content_json.items():
         paths_content = "".join(contents)
         combined_path_content += paths_template.substitute(
-            tags=tags, paths=paths_content.strip()
+            tags=tag, paths=paths_content.strip()
         )
 
     return combined_path_content

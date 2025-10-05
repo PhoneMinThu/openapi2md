@@ -202,3 +202,26 @@ def openapi_parse(spec_path: str, base_url: str = ""):
     write_md(content, output_path)
 
     print(f"✅ Markdown generated at: {output_path}")
+
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: openapi_parser <path-to-openapi.json> <server's base_url>")
+        sys.exit(1)
+
+    base_url = ""
+
+    if len(sys.argv) > 2:
+        base_url = sys.argv[2]
+
+    spec_path = sys.argv[1]
+
+    if not os.path.exists(spec_path):
+        print(f"❌ File not found: {spec_path}")
+        sys.exit(1)
+
+    openapi_parse(spec_path, base_url)
+
+
+if __name__ == "__main__":
+    main()

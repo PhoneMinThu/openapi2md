@@ -1,5 +1,5 @@
 build
-dist
+**/*dist
 main.spec
 
 __pycache__/

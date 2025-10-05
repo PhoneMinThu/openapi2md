@@ -93,11 +93,9 @@ def get_curl_content(
     components=None,
     method_info=None,
 ):
-    """Generate a properly formatted cURL command for an API endpoint."""
-    curl_parts = [f"curl -X {method.upper()} \"{url}\""]
-    
-    # Add headers
-    headers = []
+    """Generate a properly formatted cURL command using the cURL template."""
+    # Collect headers
+    header_list = []
     
     # Add authorization header if security is required
     if method_info and method_info.get("security"):
@@ -105,25 +103,26 @@ def get_curl_content(
             for key, _ in security.items():
                 scheme = security_schemes.get(key, {})
                 if scheme.get("type") == "http" and scheme.get("scheme") == "bearer":
-                    headers.append('-H "Authorization: Bearer <YOUR_TOKEN>"')
+                    header_list.append('-H "Authorization: Bearer <YOUR_TOKEN>"')
                 elif scheme.get("type") == "apiKey":
                     if scheme.get("in") == "header":
                         api_key_name = scheme.get("name", "X-API-KEY")
-                        headers.append(f'-H "{api_key_name}: <YOUR_API_KEY>"')
+                        header_list.append(f'-H "{api_key_name}: <YOUR_API_KEY>"')
     
     # Add Content-Type header if there's a request body
     if request_body and "content" in request_body:
         content_types = list(request_body["content"].keys())
         if content_types:
             content_type = content_types[0]  # Use first content type
-            headers.append(f'-H "Content-Type: {content_type}"')
+            header_list.append(f'-H "Content-Type: {content_type}"')
     
-    # Add headers to curl command
-    if headers:
-        for header in headers:
-            curl_parts.extend([" \\", f"  {header}"])
+    # Format headers for template
+    headers = ""
+    if header_list:
+        headers = " \\" + " \\".join([f"\n  {header}" for header in header_list])
     
-    # Add request body if present
+    # Generate request body if present
+    body = ""
     if request_body and "content" in request_body:
         content = request_body["content"]
         for content_type, schema_ref in content.items():
@@ -135,14 +134,21 @@ def get_curl_content(
                     json_str = json.dumps(schema_json, separators=(',', ':'))
                     # Escape single quotes for shell safety
                     json_str = json_str.replace("'", "'\"'\"'")
-                    curl_parts.extend([" \\", f"  -d '{json_str}'"])
+                    body = f" \\\n  -d '{json_str}'"
                     break  # Only use first content type
             except Exception:
                 # Fallback if JSON generation fails
-                curl_parts.extend([" \\", "  -d '{}'"]) 
+                body = " \\\n  -d '{}'"
                 break
     
-    return "\n".join(curl_parts)
+    # Use the cURL template
+    return Template(get_template("cURL")).substitute(
+        method=method.upper(),
+        url=f'"{url}"',
+        headers=headers,
+        body=body,
+        output="",
+    )
 
 
 def get_path_content(paths, securitySchemes, base_url="", components={}):

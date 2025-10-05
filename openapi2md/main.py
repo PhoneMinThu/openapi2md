@@ -74,10 +74,10 @@ def get_response_content(responses: dict, components: dict):
             for _, schema_def in schema.items():
                 schema_json = JSF(schema_def).generate(n=1)
                 response_content = response_template.substitute(
-                    status_code=status_code,
-                    description=description,
-                    content_type=content_type,
-                    schema_json=json.dumps(schema_json, indent=2),
+                    status_code=status_code.strip(),
+                    description=description.strip(),
+                    content_type=content_type.strip(),
+                    schema_json=json.dumps(schema_json, indent=2).strip(),
                 )
 
                 responses_list.append(response_content)
@@ -124,10 +124,10 @@ def get_path_content(paths, securitySchemes, base_url="", components={}):
     combined_path_content = ""
     paths_template = Template(get_template("paths"))
     for tag, contents in path_content_json.items():
-        paths_content = "".join(contents)
+        paths_content = "---\n\n".join(contents)
         combined_path_content += paths_template.substitute(
             tags=tag, paths=paths_content.strip()
-        )
+        ) + "\n"
 
     return combined_path_content
 
@@ -192,8 +192,8 @@ def openapi_parse(spec_path: str, base_url: str = "", output_dir: str = ""):
     )
 
     content = Template(get_template("combined")).substitute(
-        info=info_content.strip(),
-        auths=auths.strip(),
+        info=info_content.strip() + "\n\n---\n",
+        auths=auths.strip() + "\n\n---\n",
         paths=combined_path_content.strip(),
     )
 

@@ -44,8 +44,25 @@ def get_auth_format(schemes):
     )
 
 
+def get_request_content(request: dict, components: dict):
+    if "content" in request:
+        request_list = []
+        content = request.get("content")
+        request_template = Template(get_template("request"))
+        for content_type, schema_ref in content.items():
+            schema_def = resolve_ref(schema_ref, components)
+            schema_json = JSF(schema_def.get("schema")).generate(n=1)
+            request_content = request_template.substitute(
+                content_type=content_type,
+                schema_json=json.dumps(schema_json, indent=2),
+            )
+            request_list.append(request_content)
+        return request_list
+    return ["**`None`**"]
+
+
 def get_response_content(responses: dict, components: dict):
-    responses_list = ["**Responses:** \n"]
+    responses_list = []
     for status_code, response in responses.items():
         description = response.get("description")
         content = response.get("content", {})
@@ -63,7 +80,7 @@ def get_response_content(responses: dict, components: dict):
                     schema_json=json.dumps(schema_json, indent=2),
                 )
 
-        responses_list.append(response_content)
+                responses_list.append(response_content)
 
     return responses_list
 
@@ -83,9 +100,13 @@ def get_path_content(paths, securitySchemes, base_url="", components={}):
                     security_schemes.strip() if security_schemes else "**`None`**"
                 )
 
+                request_body = method_info.get("requestBody", {})
+                request_schemas = get_request_content(request_body, components)
+                request_content = "**Request:** \n\n" + "\n".join(request_schemas)
+
                 responses = method_info.get("responses", {})
                 responses_schemas = get_response_content(responses, components)
-                responses_content = "\n".join(responses_schemas)
+                responses_content = "**Responses:** \n\n" + "\n".join(responses_schemas)
 
                 summary = method_info.get("summary", "No summary provided")
 
@@ -95,6 +116,7 @@ def get_path_content(paths, securitySchemes, base_url="", components={}):
                     auths=security_schemes,
                     method=method.upper(),
                     summary=summary.strip(),
+                    request=request_content,
                     response=responses_content,
                 )
                 path_content_json.setdefault(tag, []).append(path_content)

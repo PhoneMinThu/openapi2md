@@ -20,6 +20,10 @@
 
 **Endpoint:** **`GET`** [localhost:8000/v1/health_check/]()
 
+**Request:** 
+
+**`None`**
+
 **Responses:** 
 
 **200** _'Successful Response'_
@@ -38,6 +42,18 @@ null
 
 **Endpoint:** **`POST`** [localhost:8000/v1/user/register/]()
 
+**Request:** 
+
+**Content-Type**: `application/json`
+
+```json
+{
+  "email": "omartaylor@example.org",
+  "raw_password": "adipisicing congue. mattis"
+}
+```
+
+
 **Responses:** 
 
 **200** _'Successful Response'_
@@ -46,10 +62,9 @@ null
 
 ```json
 {
-  "email": "sarapayne@example.com",
+  "email": "justin39@example.com",
   "is_staff": false,
-  "last_login": null,
-  "id": 1235
+  "id": 247
 }
 ```
 
@@ -58,7 +73,9 @@ null
 **Content-Type**: `application/json`
 
 ```json
-{}
+{
+  "detail": []
+}
 ```
 
 
@@ -68,6 +85,18 @@ null
 
 **Endpoint:** **`POST`** [localhost:8000/v1/user/login/]()
 
+**Request:** 
+
+**Content-Type**: `application/json`
+
+```json
+{
+  "email": "callahanchristopher@example.org",
+  "raw_password": "exercitationem"
+}
+```
+
+
 **Responses:** 
 
 **200** _'Successful Response'_
@@ -76,9 +105,9 @@ null
 
 ```json
 {
-  "access": "ipsum illum reiciendis",
-  "refresh": "Hic veniam repellendus libero tellus. Lorem",
-  "expired_at": "1975-04-27T14:00:50.180380+00:00"
+  "access": "reiciendis modi quas sit dolor a nec libero a a ut",
+  "refresh": "accusantium vitae consectetur",
+  "expired_at": "1993-01-22T19:19:41.849646+00:00"
 }
 ```
 
@@ -90,30 +119,31 @@ null
 {
   "detail": [
     {
-      "loc": [],
-      "msg": "architecto officiis placeat officiis",
-      "type": "ut accusantium a exercitationem nobis vitae"
-    },
-    {
-      "loc": [],
-      "msg": "dolor reiciendis",
-      "type": "sit Lorem ipsum nunc culpa! a possimus illum dolor"
+      "loc": [
+        6568,
+        "cursus",
+        8901,
+        "dui modi exercitationem libero congue. molestias,"
+      ],
+      "msg": "exercitationem exercitationem Lorem enim congue.",
+      "type": "vitae mattis tellus. reprehenderit placeat esse a"
     },
     {
       "loc": [
-        "Hic quas accusantium odit elit. ipsum mattis"
+        "cursus reprehenderit nunc dui",
+        7518,
+        8106
       ],
-      "msg": "esse libero nunc vehicula dolor quas",
-      "type": ""
+      "msg": "enim",
+      "type": "repellendus nunc Nullam amet Lorem sit Nullam sit"
     },
     {
       "loc": [
-        "mattis odit enim molestias, Hic a cursus culpa! ut",
-        "ipsum, ipsum, cursus Nullam elit.",
-        8481
+        384,
+        "repellendus nec architecto molestias, mattis elit."
       ],
-      "msg": "veniam Hic Nullam adipisicing",
-      "type": ""
+      "msg": "",
+      "type": "cursus architecto mattis mattis dolor nobis Lorem"
     }
   ]
 }
@@ -126,6 +156,10 @@ null
 
 **Endpoint:** **`GET`** [localhost:8000/v1/user/me/]()
 
+**Request:** 
+
+**`None`**
+
 **Responses:** 
 
 **200** _'Successful Response'_
@@ -134,9 +168,9 @@ null
 
 ```json
 {
-  "email": "nfranklin@example.com",
+  "email": "nathan44@example.org",
   "is_staff": true,
-  "id": 6130
+  "id": 8918
 }
 ```
 
@@ -147,6 +181,18 @@ null
 
 **Endpoint:** **`PATCH`** [localhost:8000/v1/user/me/]()
 
+**Request:** 
+
+**Content-Type**: `application/json`
+
+```json
+{
+  "raw_password": "dolor nobis quas mattis repellendus reprehenderit ut Lorem illum ipsum, Lorem ipsum dui culpa! a molestias, Nullam libero architecto reiciendis nunc",
+  "is_staff": true
+}
+```
+
+
 **Responses:** 
 
 **200** _'Successful Response'_
@@ -155,10 +201,9 @@ null
 
 ```json
 {
-  "email": "kimberlystephens@example.org",
-  "is_staff": true,
-  "last_login": "1999-05-05T01:00:00.856810+00:00",
-  "id": 8006
+  "email": "kevin87@example.org",
+  "is_staff": false,
+  "id": 1145
 }
 ```
 
@@ -167,9 +212,7 @@ null
 **Content-Type**: `application/json`
 
 ```json
-{
-  "detail": []
-}
+{}
 ```
 
 ---

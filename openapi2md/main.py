@@ -96,7 +96,7 @@ def get_path_content(paths, securitySchemes, base_url="", components={}):
                     for key, _ in security.items():
                         scheme = securitySchemes.get(key, {})
                         security_schemes += f"**`{key}`** _({scheme.get('type')}, {scheme.get('scheme')})_"
-                security_schemes = "- Authorizations: " + (
+                security_schemes = "### **Authorizations:** " + (
                     security_schemes.strip() if security_schemes else "**`None`**"
                 )
 

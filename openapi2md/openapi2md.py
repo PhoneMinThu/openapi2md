@@ -3,6 +3,8 @@ import sys
 import os
 from string import Template
 from collections import OrderedDict
+import copy
+from jsf import JSF
 
 
 def read_spec_json(file_path: str):
@@ -42,14 +44,38 @@ def get_auth_format(schemes):
     )
 
 
-def get_path_content(paths, securitySchemes, base_url=""):
+def get_response_content(responses: dict, components: dict):
+    responses_list = []
+    for status_code, response in responses.items():
+        description = response.get("description")
+        content = response.get("content", {})
+
+        response_template = Template(get_template("response"))
+
+        for content_type, content_json in content.items():
+            schema = resolve_ref(content_json, components)
+            for _, schema_def in schema.items():
+                schema_json = JSF(schema_def).generate(
+                    use_defaults=True, use_examples=True
+                )
+                response_content = response_template.substitute(
+                    status_code=status_code,
+                    description=description,
+                    content_type=content_type,
+                    schema_json=json.dumps(schema_json, indent=2),
+                )
+
+        responses_list.append(response_content)
+
+    return responses_list
+
+
+def get_path_content(paths, securitySchemes, base_url="", components={}):
     path_content_json = {}
     for path, path_info in paths.items():
         endpoint = f"{base_url}{path}"
         for method, method_info in path_info.items():
             for tag in method_info.get("tags", ["Default"]):
-                summary = method_info.get("summary", "No summary provided")
-
                 security_schemes = ""
                 for security in method_info.get("security", []):
                     for key, _ in security.items():
@@ -59,12 +85,19 @@ def get_path_content(paths, securitySchemes, base_url=""):
                     security_schemes.strip() if security_schemes else "**`None`**"
                 )
 
+                responses = method_info.get("responses", {})
+                responses_schemas = get_response_content(responses, components)
+                responses_content = "\n".join(responses_schemas)
+
+                summary = method_info.get("summary", "No summary provided")
+
                 path_template = Template(get_template("path"))
                 path_content = path_template.substitute(
                     endpoint=endpoint.strip(),
                     auths=security_schemes,
                     method=method.upper(),
                     summary=summary.strip(),
+                    response=responses_content,
                 )
                 path_content_json.setdefault(tag, []).append(path_content)
 
@@ -77,6 +110,44 @@ def get_path_content(paths, securitySchemes, base_url=""):
         )
 
     return combined_path_content
+
+
+def resolve_ref(schema: dict, components: dict):
+    """Recursively resolve all $ref occurrences inside a JSON schema."""
+    if isinstance(schema, dict):
+        if "$ref" in schema:
+            ref_path = schema["$ref"]
+            # if ref_path.startswith("#/components/schemas/"):
+            schema_name = ref_path.split("/")[-1]
+            # deep copy to avoid mutation
+            resolved_schema = copy.deepcopy(components["schemas"][schema_name])
+            return resolve_ref(resolved_schema, components)
+            # else:
+            #     return schema  # leave unresolved if not under components/schemas
+        else:
+            return {k: resolve_ref(v, components) for k, v in schema.items()}
+    elif isinstance(schema, list):
+        return [resolve_ref(item, components) for item in schema]
+    else:
+        return schema
+
+
+# all components
+def generate_from_components(components: dict):
+    """Resolve $ref and generate example JSON for each schema in components."""
+    results = {}
+
+    for name, schema in components["schemas"].items():
+        resolved_schema = resolve_ref(schema, components)
+
+        try:
+            example = JSF(resolved_schema)
+        except Exception as e:
+            example = f"[Error generating: {e}]"
+
+        results[name] = example.generate()
+
+    return results
 
 
 def openapi_parse(spec_path: str, base_url: str = ""):
@@ -93,7 +164,12 @@ def openapi_parse(spec_path: str, base_url: str = ""):
     auths = Template(get_template("auth")).substitute(auths=auth_schemes.strip())
 
     paths = OrderedDict(json_data.get("paths", {}))
-    combined_path_content = get_path_content(paths, securitySchemes, base_url)
+    combined_path_content = get_path_content(
+        paths,
+        securitySchemes,
+        base_url,
+        components,
+    )
 
     content = Template(get_template("combined")).substitute(
         info=info_content.strip(),

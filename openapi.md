@@ -14,11 +14,13 @@
 
 > health-check
 
-> [!tip] Health Check
+## Health Check
 
 - Authorizations: **`None`**
 
 **Endpoint:** **`GET`** [localhost:8000/v1/health_check/]()
+
+**Responses:** 
 
 **200** _'Successful Response'_
 
@@ -30,11 +32,13 @@ null
 
 > user
 
-> [!tip] Register User Endpoint
+## Register User Endpoint
 
 - Authorizations: **`None`**
 
 **Endpoint:** **`POST`** [localhost:8000/v1/user/register/]()
+
+**Responses:** 
 
 **200** _'Successful Response'_
 
@@ -42,9 +46,39 @@ null
 
 ```json
 {
-  "email": "richardmorgan@example.net",
+  "email": "sarapayne@example.com",
   "is_staff": false,
-  "id": 7623
+  "last_login": null,
+  "id": 1235
+}
+```
+
+**422** _'Validation Error'_
+
+**Content-Type**: `application/json`
+
+```json
+{}
+```
+
+
+## Login
+
+- Authorizations: **`None`**
+
+**Endpoint:** **`POST`** [localhost:8000/v1/user/login/]()
+
+**Responses:** 
+
+**200** _'Successful Response'_
+
+**Content-Type**: `application/json`
+
+```json
+{
+  "access": "ipsum illum reiciendis",
+  "refresh": "Hic veniam repellendus libero tellus. Lorem",
+  "expired_at": "1975-04-27T14:00:50.180380+00:00"
 }
 ```
 
@@ -56,59 +90,43 @@ null
 {
   "detail": [
     {
-      "loc": [
-        "enim ipsum, odit culpa! sit ipsum dui modi dui nec",
-        ""
-      ],
-      "msg": "sit odit a",
-      "type": "adipisicing elit. arcu illum congue. arcu"
+      "loc": [],
+      "msg": "architecto officiis placeat officiis",
+      "type": "ut accusantium a exercitationem nobis vitae"
+    },
+    {
+      "loc": [],
+      "msg": "dolor reiciendis",
+      "type": "sit Lorem ipsum nunc culpa! a possimus illum dolor"
     },
     {
       "loc": [
-        "reprehenderit molestias, veniam dui dolor a",
-        3963,
-        "Enim"
+        "Hic quas accusantium odit elit. ipsum mattis"
       ],
-      "msg": "vitae esse ipsum amet nunc cursus congue. dui quas",
-      "type": "possimus Lorem magnam, Lorem possimus mattis enim"
+      "msg": "esse libero nunc vehicula dolor quas",
+      "type": ""
     },
     {
       "loc": [
-        4498,
-        5445,
-        "odit",
-        "reprehenderit accusantium ipsum adipisicing ipsum,",
-        6119
+        "mattis odit enim molestias, Hic a cursus culpa! ut",
+        "ipsum, ipsum, cursus Nullam elit.",
+        8481
       ],
-      "msg": "libero illum possimus arcu vitae congue. sit nec a",
-      "type": "Nullam dui Enim ut dui"
-    },
-    {
-      "loc": [
-        1517,
-        940
-      ],
-      "msg": "quas possimus exercitationem esse repellendus",
-      "type": "reprehenderit Hic vehicula odit esse"
-    },
-    {
-      "loc": [
-        "arcu accusantium enim nec",
-        "accusantium dui elit. reprehenderit esse"
-      ],
-      "msg": "possimus Lorem",
-      "type": "dolor nec arcu nunc molestias, molestias, quas sit"
+      "msg": "veniam Hic Nullam adipisicing",
+      "type": ""
     }
   ]
 }
 ```
 
 
-> [!tip] Login
+## Me
 
-- Authorizations: **`None`**
+- Authorizations: **`CustomHTTPBearer`** _(http, bearer)_
 
-**Endpoint:** **`POST`** [localhost:8000/v1/user/login/]()
+**Endpoint:** **`GET`** [localhost:8000/v1/user/me/]()
+
+**Responses:** 
 
 **200** _'Successful Response'_
 
@@ -116,9 +134,31 @@ null
 
 ```json
 {
-  "access": "repellendus tellus. officiis",
-  "refresh": "ipsum exercitationem nobis Hic repellendus odit ut",
-  "expired_at": "1977-05-24T21:26:20.972066+00:00"
+  "email": "nfranklin@example.com",
+  "is_staff": true,
+  "id": 6130
+}
+```
+
+
+## Partial Update
+
+- Authorizations: **`CustomHTTPBearer`** _(http, bearer)_
+
+**Endpoint:** **`PATCH`** [localhost:8000/v1/user/me/]()
+
+**Responses:** 
+
+**200** _'Successful Response'_
+
+**Content-Type**: `application/json`
+
+```json
+{
+  "email": "kimberlystephens@example.org",
+  "is_staff": true,
+  "last_login": "1999-05-05T01:00:00.856810+00:00",
+  "id": 8006
 }
 ```
 
@@ -129,100 +169,6 @@ null
 ```json
 {
   "detail": []
-}
-```
-
-
-> [!tip] Me
-
-- Authorizations: **`CustomHTTPBearer`** _(http, bearer)_
-
-**Endpoint:** **`GET`** [localhost:8000/v1/user/me/]()
-
-**200** _'Successful Response'_
-
-**Content-Type**: `application/json`
-
-```json
-{
-  "email": "christopher53@example.com",
-  "id": 2407
-}
-```
-
-
-> [!tip] Partial Update
-
-- Authorizations: **`CustomHTTPBearer`** _(http, bearer)_
-
-**Endpoint:** **`PATCH`** [localhost:8000/v1/user/me/]()
-
-**200** _'Successful Response'_
-
-**Content-Type**: `application/json`
-
-```json
-{
-  "email": "qroman@example.com",
-  "is_staff": true,
-  "last_login": "2006-09-27T23:14:28.455242+00:00",
-  "id": 8558
-}
-```
-
-**422** _'Validation Error'_
-
-**Content-Type**: `application/json`
-
-```json
-{
-  "detail": [
-    {
-      "loc": [
-        7219
-      ],
-      "msg": "a ipsum placeat magnam, dolor",
-      "type": "cursus"
-    },
-    {
-      "loc": [
-        2689,
-        3251,
-        "elit. vehicula ipsum congue. arcu reiciendis esse",
-        7472,
-        "a"
-      ],
-      "msg": "illum esse reiciendis veniam placeat",
-      "type": "congue. consectetur veniam elit. Hic congue. dolor"
-    },
-    {
-      "loc": [
-        7252,
-        4072,
-        "sit",
-        1217,
-        4653
-      ],
-      "msg": "reprehenderit ipsum",
-      "type": "Enim veniam"
-    },
-    {
-      "loc": [
-        "Nullam",
-        9909
-      ],
-      "msg": "nunc arcu reprehenderit amet ipsum, mattis veniam",
-      "type": "placeat modi exercitationem congue. mattis modi ut"
-    },
-    {
-      "loc": [
-        2652,
-        "vehicula adipisicing tellus. mattis ipsum esse"
-      ],
-      "msg": "",
-      "type": "Nullam reiciendis magnam, esse"
-    }
-  ]
 }
 ```
 

@@ -45,7 +45,7 @@ def get_auth_format(schemes):
 
 
 def get_response_content(responses: dict, components: dict):
-    responses_list = []
+    responses_list = ["**Responses:** \n"]
     for status_code, response in responses.items():
         description = response.get("description")
         content = response.get("content", {})
@@ -55,9 +55,7 @@ def get_response_content(responses: dict, components: dict):
         for content_type, content_json in content.items():
             schema = resolve_ref(content_json, components)
             for _, schema_def in schema.items():
-                schema_json = JSF(schema_def).generate(
-                    use_defaults=True, use_examples=True
-                )
+                schema_json = JSF(schema_def).generate(n=1)
                 response_content = response_template.substitute(
                     status_code=status_code,
                     description=description,

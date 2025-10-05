@@ -1,5 +1,6 @@
 build
 **/*dist
+**/*target
 main.spec
 
 __pycache__/

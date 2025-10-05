@@ -102,11 +102,11 @@ def get_path_content(paths, securitySchemes, base_url="", components={}):
 
                 request_body = method_info.get("requestBody", {})
                 request_schemas = get_request_content(request_body, components)
-                request_content = "**Request:** \n\n" + "\n".join(request_schemas)
+                request_content = "### **Request:** \n\n" + "\n".join(request_schemas)
 
                 responses = method_info.get("responses", {})
                 responses_schemas = get_response_content(responses, components)
-                responses_content = "**Responses:** \n\n" + "\n".join(responses_schemas)
+                responses_content = "### **Responses:** \n\n" + "\n".join(responses_schemas)
 
                 summary = method_info.get("summary", "No summary provided")
 

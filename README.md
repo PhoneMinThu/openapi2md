@@ -41,9 +41,32 @@ cp ./openapi2md/dist/main ~/.local/bin/openapi2md
 ## Remove build files
 
 ```bash
-rm -rf ./build && \
-rm -rf **/*dist/ && \
-rm -rf **/*main.spec
+sudo rm -rf ./build/ && \
+sudo rm -rf **/*dist/ && \
+sudo rm -rf ./py_openapi.egg-info/ && \
+sudo rm -rf **/*main.spec
+```
+
+---
+
+## uv build and publish
+
+- build
+
+```bash
+uv build
+```
+
+- publish
+
+```bash
+uv publish
+```
+
+- uvx run
+
+```bash
+uvx py-openapi2md
 ```
 
 ---

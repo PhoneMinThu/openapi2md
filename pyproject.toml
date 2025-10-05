@@ -1,5 +1,5 @@
 [project]
-name = "py-openapi"
+name = "py-openapi2md"
 version = "0.1.0"
 description = "OpenAPI to Markdown generator"
 readme = "README.md"
@@ -8,3 +8,6 @@ dependencies = [
     "jsf>=0.11.2",
     "pyinstaller>=6.16.0",
 ]
+
+[project.scripts]
+openapi2md = "openapi2md.__main__:main"

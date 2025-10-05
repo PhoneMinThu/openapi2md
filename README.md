@@ -10,6 +10,14 @@ uv sync
 
 ---
 
+## Run
+
+```bash
+python3 ./openapi2md/main.py openapi.json localhost:8000 target/openapi.md
+```
+
+---
+
 ## Build binary
 
 > [!info] Build binary with pyinstaller

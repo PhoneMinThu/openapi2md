@@ -170,7 +170,7 @@ def generate_from_components(components: dict):
     return results
 
 
-def openapi_parse(spec_path: str, base_url: str = ""):
+def openapi_parse(spec_path: str, base_url: str = "", output_dir: str = ""):
     json_data = read_spec_json(spec_path)
 
     info = json_data.get("info", {})
@@ -197,8 +197,18 @@ def openapi_parse(spec_path: str, base_url: str = ""):
         paths=combined_path_content.strip(),
     )
 
+    if not output_dir:
+        output_dir = "openapi.md"
+    else:
+        output_path_list = output_dir.split("/")
+        output_path_list.pop(-1)
+        output_path = "/".join(output_path_list)
+        print(f"Making Directory {output_path}")
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
+
     # write MD beside input file
-    output_path = os.path.join(os.path.dirname(spec_path), "openapi.md")
+    output_path = os.path.join(os.path.dirname(spec_path), output_dir)
     write_md(content, output_path)
 
     print(f"✅ Markdown generated at: {output_path}")
@@ -206,13 +216,19 @@ def openapi_parse(spec_path: str, base_url: str = ""):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: openapi_parser <path-to-openapi.json> <server's base_url>")
+        print(
+            "Usage: openapi_parser <path-to-openapi.json> <server's base_url> <output dir>"
+        )
         sys.exit(1)
 
     base_url = ""
+    output_dir = ""
 
     if len(sys.argv) > 2:
         base_url = sys.argv[2]
+
+    if len(sys.argv) > 3:
+        output_dir = sys.argv[3]
 
     spec_path = sys.argv[1]
 
@@ -220,7 +236,7 @@ def main():
         print(f"❌ File not found: {spec_path}")
         sys.exit(1)
 
-    openapi_parse(spec_path, base_url)
+    openapi_parse(spec_path, base_url, output_dir)
 
 
 if __name__ == "__main__":

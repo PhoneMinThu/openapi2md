@@ -96,7 +96,7 @@ def get_curl_content(
     """Generate a properly formatted cURL command using the cURL template."""
     # Collect headers
     header_list = []
-    
+
     # Add authorization header if security is required
     if method_info and method_info.get("security"):
         for security in method_info.get("security", []):
@@ -108,19 +108,19 @@ def get_curl_content(
                     if scheme.get("in") == "header":
                         api_key_name = scheme.get("name", "X-API-KEY")
                         header_list.append(f'-H "{api_key_name}: <YOUR_API_KEY>"')
-    
+
     # Add Content-Type header if there's a request body
     if request_body and "content" in request_body:
         content_types = list(request_body["content"].keys())
         if content_types:
             content_type = content_types[0]  # Use first content type
             header_list.append(f'-H "Content-Type: {content_type}"')
-    
+
     # Format headers for template
     headers = ""
     if header_list:
         headers = " \\" + " \\".join([f"\n  {header}" for header in header_list])
-    
+
     # Generate request body if present
     body = ""
     if request_body and "content" in request_body:
@@ -131,7 +131,7 @@ def get_curl_content(
                 if "schema" in schema_def:
                     # Generate example JSON
                     schema_json = JSF(schema_def["schema"]).generate(n=1)
-                    json_str = json.dumps(schema_json, separators=(',', ':'))
+                    json_str = json.dumps(schema_json, separators=(",", ":"))
                     # Escape single quotes for shell safety
                     json_str = json_str.replace("'", "'\"'\"'")
                     body = f" \\\n  -d '{json_str}'"
@@ -140,7 +140,7 @@ def get_curl_content(
                 # Fallback if JSON generation fails
                 body = " \\\n  -d '{}'"
                 break
-    
+
     # Use the cURL template
     return Template(get_template("cURL")).substitute(
         method=method.upper(),

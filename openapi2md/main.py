@@ -85,6 +85,66 @@ def get_response_content(responses: dict, components: dict):
     return responses_list
 
 
+def get_curl_content(
+    method,
+    url,
+    security_schemes=None,
+    request_body=None,
+    components=None,
+    method_info=None,
+):
+    """Generate a properly formatted cURL command for an API endpoint."""
+    curl_parts = [f"curl -X {method.upper()} \"{url}\""]
+    
+    # Add headers
+    headers = []
+    
+    # Add authorization header if security is required
+    if method_info and method_info.get("security"):
+        for security in method_info.get("security", []):
+            for key, _ in security.items():
+                scheme = security_schemes.get(key, {})
+                if scheme.get("type") == "http" and scheme.get("scheme") == "bearer":
+                    headers.append('-H "Authorization: Bearer <YOUR_TOKEN>"')
+                elif scheme.get("type") == "apiKey":
+                    if scheme.get("in") == "header":
+                        api_key_name = scheme.get("name", "X-API-KEY")
+                        headers.append(f'-H "{api_key_name}: <YOUR_API_KEY>"')
+    
+    # Add Content-Type header if there's a request body
+    if request_body and "content" in request_body:
+        content_types = list(request_body["content"].keys())
+        if content_types:
+            content_type = content_types[0]  # Use first content type
+            headers.append(f'-H "Content-Type: {content_type}"')
+    
+    # Add headers to curl command
+    if headers:
+        for header in headers:
+            curl_parts.extend([" \\", f"  {header}"])
+    
+    # Add request body if present
+    if request_body and "content" in request_body:
+        content = request_body["content"]
+        for content_type, schema_ref in content.items():
+            try:
+                schema_def = resolve_ref(schema_ref, components or {})
+                if "schema" in schema_def:
+                    # Generate example JSON
+                    schema_json = JSF(schema_def["schema"]).generate(n=1)
+                    json_str = json.dumps(schema_json, separators=(',', ':'))
+                    # Escape single quotes for shell safety
+                    json_str = json_str.replace("'", "'\"'\"'")
+                    curl_parts.extend([" \\", f"  -d '{json_str}'"])
+                    break  # Only use first content type
+            except Exception:
+                # Fallback if JSON generation fails
+                curl_parts.extend([" \\", "  -d '{}'"]) 
+                break
+    
+    return "\n".join(curl_parts)
+
+
 def get_path_content(paths, securitySchemes, base_url="", components={}):
     path_content_json = {}
     for path, path_info in paths.items():
@@ -106,7 +166,18 @@ def get_path_content(paths, securitySchemes, base_url="", components={}):
 
                 responses = method_info.get("responses", {})
                 responses_schemas = get_response_content(responses, components)
-                responses_content = "### **Responses:** \n\n" + "\n".join(responses_schemas)
+                responses_content = "### **Responses:** \n\n" + "\n".join(
+                    responses_schemas
+                )
+
+                curl_content = get_curl_content(
+                    method=method,
+                    url=endpoint,
+                    security_schemes=securitySchemes,
+                    request_body=request_body,
+                    components=components,
+                    method_info=method_info,
+                )
 
                 summary = method_info.get("summary", "No summary provided")
 
@@ -118,6 +189,7 @@ def get_path_content(paths, securitySchemes, base_url="", components={}):
                     summary=summary.strip(),
                     request=request_content,
                     response=responses_content,
+                    curl=curl_content,
                 )
                 path_content_json.setdefault(tag, []).append(path_content)
 
@@ -125,9 +197,9 @@ def get_path_content(paths, securitySchemes, base_url="", components={}):
     paths_template = Template(get_template("paths"))
     for tag, contents in path_content_json.items():
         paths_content = "---\n\n".join(contents)
-        combined_path_content += paths_template.substitute(
-            tags=tag, paths=paths_content.strip()
-        ) + "\n"
+        combined_path_content += (
+            paths_template.substitute(tags=tag, paths=paths_content.strip()) + "\n"
+        )
 
     return combined_path_content
 

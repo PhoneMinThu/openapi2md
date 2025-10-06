@@ -103,7 +103,7 @@ def get_curl_content(
             for key, _ in security.items():
                 scheme = security_schemes.get(key, {})
                 if scheme.get("type") == "http" and scheme.get("scheme") == "bearer":
-                    header_list.append('-H "Authorization: Bearer <YOUR_TOKEN>"')
+                    header_list.append('-H "Authorization: Bearer $TOKEN"')
                 elif scheme.get("type") == "apiKey":
                     if scheme.get("in") == "header":
                         api_key_name = scheme.get("name", "X-API-KEY")

@@ -1,6 +1,6 @@
 [project]
 name = "py-openapi2md"
-version = "0.2.0"
+version = "0.2.1"
 description = "OpenAPI to Markdown generator"
 readme = "README.md"
 requires-python = ">=3.11"

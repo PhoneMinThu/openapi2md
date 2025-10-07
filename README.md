@@ -66,7 +66,7 @@ uv publish
 - uvx run
 
 ```bash
-uvx py-openapi2md
+uvx --from py-openapi2md openapi2md <openapi schema json> <server url> <output directory>
 ```
 
 ---

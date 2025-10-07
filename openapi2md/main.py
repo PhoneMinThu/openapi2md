@@ -1,0 +1,321 @@
+import json
+import sys
+import os
+from string import Template
+from collections import OrderedDict
+import copy
+from jsf import JSF
+
+
+def read_spec_json(file_path: str):
+    with open(file_path, "r") as spec_json:
+        return json.load(spec_json)
+
+
+def get_template(template_name: str):
+    """
+    Load template content, works both in development and PyInstaller binary.
+    """
+    if getattr(sys, "frozen", False):
+        # Running inside PyInstaller binary
+        base_path = sys._MEIPASS
+        template_path = os.path.join(
+            base_path, "openapi2md", "templates", f"{template_name}-template.mdx"
+        )
+    else:
+        # Running from source
+        template_path = os.path.join(
+            os.path.dirname(__file__), "templates", f"{template_name}-template.mdx"
+        )
+
+    with open(template_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+def write_md(content: str, output_path: str):
+    with open(output_path, "w", encoding="utf-8") as api_doc:
+        api_doc.write(content)
+
+
+def get_auth_format(schemes):
+    return "".join(
+        f"**`{key}`** _({scheme.get('type')}, {scheme.get('scheme')})_"
+        for key, scheme in schemes.items()
+    )
+
+
+def get_request_content(request: dict, components: dict):
+    if "content" in request:
+        request_list = []
+        content = request.get("content")
+        request_template = Template(get_template("request"))
+        for content_type, schema_ref in content.items():
+            schema_def = resolve_ref(schema_ref, components)
+            schema_json = JSF(schema_def.get("schema")).generate(n=1)
+            request_content = request_template.substitute(
+                content_type=content_type,
+                schema_json=json.dumps(schema_json, indent=2),
+            )
+            request_list.append(request_content)
+        return request_list
+    return ["**`None`**"]
+
+
+def get_response_content(responses: dict, components: dict):
+    responses_list = []
+    for status_code, response in responses.items():
+        description = response.get("description")
+        content = response.get("content", {})
+
+        response_template = Template(get_template("response"))
+
+        for content_type, content_json in content.items():
+            schema = resolve_ref(content_json, components)
+            for _, schema_def in schema.items():
+                schema_json = JSF(schema_def).generate(n=1)
+                response_content = response_template.substitute(
+                    status_code=status_code.strip(),
+                    description=description.strip(),
+                    content_type=content_type.strip(),
+                    schema_json=json.dumps(schema_json, indent=2).strip(),
+                )
+
+                responses_list.append(response_content)
+
+    return responses_list
+
+
+def get_curl_content(
+    method,
+    url,
+    security_schemes=None,
+    request_body=None,
+    components=None,
+    method_info=None,
+):
+    """Generate a properly formatted cURL command using the cURL template."""
+    # Collect headers
+    header_list = []
+
+    # Add authorization header if security is required
+    if method_info and method_info.get("security"):
+        for security in method_info.get("security", []):
+            for key, _ in security.items():
+                scheme = security_schemes.get(key, {})
+                if scheme.get("type") == "http" and scheme.get("scheme") == "bearer":
+                    header_list.append('-H "Authorization: Bearer $TOKEN"')
+                elif scheme.get("type") == "apiKey":
+                    if scheme.get("in") == "header":
+                        api_key_name = scheme.get("name", "X-API-KEY")
+                        header_list.append(f'-H "{api_key_name}: <YOUR_API_KEY>"')
+
+    # Add Content-Type header if there's a request body
+    if request_body and "content" in request_body:
+        content_types = list(request_body["content"].keys())
+        if content_types:
+            content_type = content_types[0]  # Use first content type
+            header_list.append(f'-H "Content-Type: {content_type}"')
+
+    # Format headers for template
+    headers = ""
+    if header_list:
+        headers = " \\" + " \\".join([f"\n  {header}" for header in header_list])
+
+    # Generate request body if present
+    body = ""
+    if request_body and "content" in request_body:
+        content = request_body["content"]
+        for content_type, schema_ref in content.items():
+            try:
+                schema_def = resolve_ref(schema_ref, components or {})
+                if "schema" in schema_def:
+                    # Generate example JSON
+                    schema_json = JSF(schema_def["schema"]).generate(n=1)
+                    json_str = json.dumps(schema_json, separators=(",", ":"))
+                    # Escape single quotes for shell safety
+                    json_str = json_str.replace("'", "'\"'\"'")
+                    body = f" \\\n  -d '{json_str}'"
+                    break  # Only use first content type
+            except Exception:
+                # Fallback if JSON generation fails
+                body = " \\\n  -d '{}'"
+                break
+
+    # Use the cURL template
+    return Template(get_template("cURL")).substitute(
+        method=method.upper(),
+        url=f'"{url}"',
+        headers=headers,
+        body=body,
+        output="",
+    )
+
+
+def get_path_content(paths, securitySchemes, base_url="", components={}):
+    path_content_json = {}
+    for path, path_info in paths.items():
+        endpoint = f"{base_url}{path}"
+        for method, method_info in path_info.items():
+            for tag in method_info.get("tags", ["Default"]):
+                security_schemes = ""
+                for security in method_info.get("security", []):
+                    for key, _ in security.items():
+                        scheme = securitySchemes.get(key, {})
+                        security_schemes += f"**`{key}`** _({scheme.get('type')}, {scheme.get('scheme')})_"
+                security_schemes = "### **Authorizations:** " + (
+                    security_schemes.strip() if security_schemes else "**`None`**"
+                )
+
+                request_body = method_info.get("requestBody", {})
+                request_schemas = get_request_content(request_body, components)
+                request_content = "### **Request:** \n\n" + "\n".join(request_schemas)
+
+                responses = method_info.get("responses", {})
+                responses_schemas = get_response_content(responses, components)
+                responses_content = "### **Responses:** \n\n" + "\n".join(
+                    responses_schemas
+                )
+
+                curl_content = get_curl_content(
+                    method=method,
+                    url=endpoint,
+                    security_schemes=securitySchemes,
+                    request_body=request_body,
+                    components=components,
+                    method_info=method_info,
+                )
+
+                summary = method_info.get("summary", "No summary provided")
+
+                path_template = Template(get_template("path"))
+                path_content = path_template.substitute(
+                    endpoint=endpoint.strip(),
+                    auths=security_schemes,
+                    method=method.upper(),
+                    summary=summary.strip(),
+                    request=request_content,
+                    response=responses_content,
+                    curl=curl_content,
+                )
+                path_content_json.setdefault(tag, []).append(path_content)
+
+    combined_path_content = ""
+    paths_template = Template(get_template("paths"))
+    for tag, contents in path_content_json.items():
+        paths_content = "---\n\n".join(contents)
+        combined_path_content += (
+            paths_template.substitute(tags=tag, paths=paths_content.strip()) + "\n"
+        )
+
+    return combined_path_content
+
+
+def resolve_ref(schema: dict, components: dict):
+    """Recursively resolve all $ref occurrences inside a JSON schema."""
+    if isinstance(schema, dict):
+        if "$ref" in schema:
+            ref_path = schema["$ref"]
+            # if ref_path.startswith("#/components/schemas/"):
+            schema_name = ref_path.split("/")[-1]
+            # deep copy to avoid mutation
+            resolved_schema = copy.deepcopy(components["schemas"][schema_name])
+            return resolve_ref(resolved_schema, components)
+            # else:
+            #     return schema  # leave unresolved if not under components/schemas
+        else:
+            return {k: resolve_ref(v, components) for k, v in schema.items()}
+    elif isinstance(schema, list):
+        return [resolve_ref(item, components) for item in schema]
+    else:
+        return schema
+
+
+# all components
+def generate_from_components(components: dict):
+    """Resolve $ref and generate example JSON for each schema in components."""
+    results = {}
+
+    for name, schema in components["schemas"].items():
+        resolved_schema = resolve_ref(schema, components)
+
+        try:
+            example = JSF(resolved_schema)
+        except Exception as e:
+            example = f"[Error generating: {e}]"
+
+        results[name] = example.generate()
+
+    return results
+
+
+def openapi_parse(spec_path: str, base_url: str = "", output_dir: str = ""):
+    json_data = read_spec_json(spec_path)
+
+    info = json_data.get("info", {})
+    info_template = Template(get_template("info"))
+    info_content = info_template.substitute(**info)
+
+    components = json_data.get("components", {})
+    securitySchemes = components.get("securitySchemes", {})
+
+    auth_schemes = get_auth_format(securitySchemes)
+    auths = Template(get_template("auth")).substitute(auths=auth_schemes.strip())
+
+    paths = OrderedDict(json_data.get("paths", {}))
+    combined_path_content = get_path_content(
+        paths,
+        securitySchemes,
+        base_url,
+        components,
+    )
+
+    content = Template(get_template("combined")).substitute(
+        info=info_content.strip() + "\n\n---\n",
+        auths=auths.strip() + "\n\n---\n",
+        paths=combined_path_content.strip(),
+    )
+
+    if not output_dir:
+        output_dir = "openapi.md"
+    else:
+        output_path_list = output_dir.split("/")
+        output_path_list.pop(-1)
+        output_path = "/".join(output_path_list)
+        print(f"Making Directory {output_path}")
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
+
+    # write MD beside input file
+    output_path = os.path.join(os.path.dirname(spec_path), output_dir)
+    write_md(content, output_path)
+
+    print(f"✅ Markdown generated at: {output_path}")
+
+
+def main():
+    if len(sys.argv) < 2:
+        print(
+            "Usage: openapi_parser <path-to-openapi.json> <server's base_url> <output dir>"
+        )
+        sys.exit(1)
+
+    base_url = ""
+    output_dir = ""
+
+    if len(sys.argv) > 2:
+        base_url = sys.argv[2]
+
+    if len(sys.argv) > 3:
+        output_dir = sys.argv[3]
+
+    spec_path = sys.argv[1]
+
+    if not os.path.exists(spec_path):
+        print(f"❌ File not found: {spec_path}")
+        sys.exit(1)
+
+    openapi_parse(spec_path, base_url, output_dir)
+
+
+if __name__ == "__main__":
+    main()

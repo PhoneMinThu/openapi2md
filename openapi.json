@@ -12,7 +12,9 @@
   "paths": {
     "/v1/health_check/": {
       "get": {
-        "tags": ["health-check"],
+        "tags": [
+          "health-check"
+        ],
         "summary": "Health Check",
         "operationId": "health_check_v1_health_check__get",
         "responses": {
@@ -29,7 +31,9 @@
     },
     "/v1/user/register/": {
       "post": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "Register User Endpoint",
         "operationId": "register_user_endpoint_v1_user_register__post",
         "requestBody": {
@@ -68,7 +72,9 @@
     },
     "/v1/user/login/": {
       "post": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "Login",
         "operationId": "login_v1_user_login__post",
         "requestBody": {
@@ -107,9 +113,11 @@
     },
     "/v1/user/me/": {
       "get": {
-        "tags": ["user"],
-        "summary": "Me",
-        "operationId": "me_v1_user_me__get",
+        "tags": [
+          "user"
+        ],
+        "summary": "Retrieve",
+        "operationId": "retrieve_v1_user_me__get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -128,8 +136,32 @@
           }
         ]
       },
+      "delete": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Delete",
+        "operationId": "delete_v1_user_me__delete",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "CustomHTTPBearer": []
+          }
+        ]
+      },
       "patch": {
-        "tags": ["user"],
+        "tags": [
+          "user"
+        ],
         "summary": "Partial Update",
         "operationId": "partial_update_v1_user_me__patch",
         "requestBody": {
@@ -204,7 +236,11 @@
           }
         },
         "type": "object",
-        "required": ["access", "refresh", "expired_at"],
+        "required": [
+          "access",
+          "refresh",
+          "expired_at"
+        ],
         "title": "LoginResponseSchema"
       },
       "UserCreateSchema": {
@@ -223,7 +259,10 @@
           }
         },
         "type": "object",
-        "required": ["email", "raw_password"],
+        "required": [
+          "email",
+          "raw_password"
+        ],
         "title": "UserCreateSchema"
       },
       "UserLoginSchema": {
@@ -242,7 +281,10 @@
           }
         },
         "type": "object",
-        "required": ["email", "raw_password"],
+        "required": [
+          "email",
+          "raw_password"
+        ],
         "title": "UserLoginSchema"
       },
       "UserResponseSchema": {
@@ -275,7 +317,10 @@
           }
         },
         "type": "object",
-        "required": ["email", "id"],
+        "required": [
+          "email",
+          "id"
+        ],
         "title": "UserResponseSchema"
       },
       "UserUpdateSchema": {
@@ -293,9 +338,16 @@
             "title": "Email"
           },
           "raw_password": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Raw Password",
             "description": "Raw password"
           },
@@ -309,6 +361,18 @@
               }
             ],
             "title": "Is Staff"
+          },
+          "alive": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alive",
+            "default": true
           },
           "last_login": {
             "anyOf": [
@@ -324,7 +388,6 @@
           }
         },
         "type": "object",
-        "required": ["raw_password"],
         "title": "UserUpdateSchema"
       },
       "ValidationError": {
@@ -353,7 +416,11 @@
           }
         },
         "type": "object",
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError"
       }
     },

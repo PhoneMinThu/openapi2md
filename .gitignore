@@ -1,3 +1,8 @@
 build
-dist
+**/*dist
+**/*target
+**/*output
 main.spec
+
+__pycache__/
+**/*.egg-info*

@@ -1,9 +1,16 @@
 [project]
-name = "py-openapi"
-version = "0.1.0"
+name = "py-openapi2md"
+version = "0.2.1"
 description = "OpenAPI to Markdown generator"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "jsf>=0.11.2",
     "pyinstaller>=6.16.0",
 ]
+
+[tool.setuptools.package-data]
+"openapi2md" = ["templates/*.mdx"]
+
+[project.scripts]
+openapi2md = "openapi2md.main:main"
